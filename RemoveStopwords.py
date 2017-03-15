@@ -1,11 +1,14 @@
 from nltk.corpus import stopwords
 from py2neo import Graph,authenticate
+from nltk.stem.porter import PorterStemmer
 import re, string
 import string
+porter_stemmer=PorterStemmer()
+
 
 # default uri for local Neo4j instance
 #authenticate("localhost:7474", "neo4j", "divyang001")
-graphdb = Graph('http://neo4j:neo4j@localhost:7474/db/data',user='neo4j', password='divyang001')
+graphdb = Graph('http://neo4j:neo4j@localhost:7474/db/data',user='neo4j', password='gauridhawan22')
 
 # parameterized Cypher query for data insertion
 # t is a query parameter. a list with two elements: [word1, word2]
@@ -16,23 +19,27 @@ INSERT_QUERY = '''
         CREATE (w0)-[:NEXT_WORD]->(w1)
         )
 '''
+
 # arrifySentence("Hi there, Bob!) = [["hi", "there"], ["there", "bob"]]
 def arrifySentence(sentence):
-    sentence = sentence.lower()
-    sentence = sentence.strip()
-    exclude = set(string.punctuation)
-    regex = re.compile('[%s]' % re.escape(string.punctuation))
-    sentence = regex.sub('', sentence)
-    wordArray = sentence.split()
-    filtered_words =[word for word in wordArray if (word not in stopwords.words('english') and len(word)>1)]
-    finalset = set(filtered_words)
-    filtered_words = list(finalset)
-    tupleList = []
-    for i, word in enumerate(filtered_words):
-        if i+1 == len(filtered_words):
-            break
-        tupleList.append([word, filtered_words[i+1]])
-    return tupleList
+	stemmed_words=[]
+	sentence = sentence.lower()
+	sentence = sentence.strip()
+	exclude = set(string.punctuation)
+	regex = re.compile('[%s]' % re.escape(string.punctuation))
+	sentence = regex.sub('', sentence)
+	wordArray = sentence.split()
+	filtered_words =[word for word in wordArray if (word not in stopwords.words('english') and len(word)>1)]
+	finalset = set(filtered_words)
+	filtered_words = list(finalset)
+	for word in filtered_words:
+		stemmed_words=stemmed_words+[porter_stemmer.stem(word)]
+	tupleList = []
+	for i, word in enumerate(stemmed_words):
+		if i+1 == len(stemmed_words):
+			break
+		tupleList.append([word, stemmed_words[i+1]])
+	return tupleList
 
 def main():
     tx = graphdb.begin()
@@ -72,7 +79,7 @@ def main23():
 
 	finalsets = set(filtered_words)
 	filtered_words = list(finalsets)
-	print filtered_words
+	print (filtered_words)
 
 
 
